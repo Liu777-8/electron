@@ -8,39 +8,45 @@
 
     <!-- 功能模块卡片 -->
     <div class="modules-grid">
-      <!-- 喝水提醒模块 -->
-      <div class="module-card" @click="navigateTo('/drink-water')">
-        <div class="module-icon">💧</div>
-        <h3 class="module-title">喝水提醒</h3>
-        <p class="module-description">定时提醒您保持充足的水分摄入</p>
+      <!-- 统一的休息提醒模块 -->
+      <div class="module-card" @click="navigateTo('/rest-reminder')">
+        <div class="module-icon">⏰</div>
+        <h3 class="module-title">休息提醒</h3>
+        <p class="module-description">统一管理喝水、运动、休息、饮食等健康提醒</p>
         <div class="module-status">
           <span class="status-badge">可用</span>
         </div>
+        <div class="module-features">
+          <span class="feature-tag">💧 喝水</span>
+          <span class="feature-tag">🏃‍♂️ 运动</span>
+          <span class="feature-tag">😴 休息</span>
+          <span class="feature-tag">🍎 饮食</span>
+        </div>
       </div>
 
-      <!-- 预留的其他提醒模块 -->
+      <!-- 预留的其他功能模块 -->
       <div class="module-card coming-soon">
-        <div class="module-icon">🏃‍♂️</div>
-        <h3 class="module-title">运动提醒</h3>
-        <p class="module-description">提醒您定时进行运动锻炼</p>
+        <div class="module-icon">📊</div>
+        <h3 class="module-title">健康统计</h3>
+        <p class="module-description">查看详细的健康数据统计和分析</p>
         <div class="module-status">
           <span class="status-badge coming">即将推出</span>
         </div>
       </div>
 
       <div class="module-card coming-soon">
-        <div class="module-icon">😴</div>
-        <h3 class="module-title">休息提醒</h3>
-        <p class="module-description">提醒您适时休息，保护视力</p>
+        <div class="module-icon">⚙️</div>
+        <h3 class="module-title">设置中心</h3>
+        <p class="module-description">个性化设置和偏好配置</p>
         <div class="module-status">
           <span class="status-badge coming">即将推出</span>
         </div>
       </div>
 
       <div class="module-card coming-soon">
-        <div class="module-icon">🍎</div>
-        <h3 class="module-title">饮食提醒</h3>
-        <p class="module-description">提醒您按时用餐，保持营养均衡</p>
+        <div class="module-icon">🎯</div>
+        <h3 class="module-title">目标管理</h3>
+        <p class="module-description">设定和追踪您的健康目标</p>
         <div class="module-status">
           <span class="status-badge coming">即将推出</span>
         </div>
@@ -51,9 +57,9 @@
     <div class="quick-actions">
       <h2>快速操作</h2>
       <div class="actions-grid">
-        <button class="action-btn" @click="navigateTo('/drink-water')">
+        <button class="action-btn" @click="navigateTo('/rest-reminder')">
           <span class="action-icon">🚀</span>
-          开始喝水提醒
+          开始休息提醒
         </button>
         <button class="action-btn" disabled>
           <span class="action-icon">⚙️</span>
@@ -82,6 +88,7 @@ const navigateTo = (path) => {
   height: 100%;
   font-family: "Arial", sans-serif;
   overflow-y: auto;
+  padding: 16px;
 }
 
 .header {
@@ -178,6 +185,25 @@ const navigateTo = (path) => {
 .status-badge.coming {
   background: #ffc107;
   color: #212529;
+}
+
+.module-features {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feature-tag {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .quick-actions {

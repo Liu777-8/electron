@@ -63,6 +63,98 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
+/* ===== 全局美化滚动条样式 ===== */
+/* Webkit浏览器滚动条样式 (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px; /* 垂直滚动条宽度 */
+  height: 8px; /* 水平滚动条高度 */
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+  border-radius: 10px;
+  margin: 2px; /* 轨道边距 */
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2); /* 渐变色滑块 */
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* 滚动条滑块悬停效果 */
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #5a6fd8, #6a4190);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transform: scale(1.1);
+}
+
+/* 滚动条滑块激活效果 */
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(45deg, #4e5bc6, #5e377e);
+}
+
+/* 滚动条角落 */
+::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Firefox滚动条样式 */
+* {
+  scrollbar-width: thin; /* 细滚动条 */
+  scrollbar-color: #667eea rgba(255, 255, 255, 0.1); /* 滑块颜色 轨道颜色 */
+}
+
+/* 特殊区域的滚动条样式 */
+/* 卡片内的滚动条 */
+.card::-webkit-scrollbar,
+.settings-card::-webkit-scrollbar,
+.control-card::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.card::-webkit-scrollbar-track,
+.settings-card::-webkit-scrollbar-track,
+.control-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.card::-webkit-scrollbar-thumb,
+.settings-card::-webkit-scrollbar-thumb,
+.control-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  border: none;
+}
+
+.card::-webkit-scrollbar-thumb:hover,
+.settings-card::-webkit-scrollbar-thumb:hover,
+.control-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 导航栏区域的滚动条 */
+.navigation-bar::-webkit-scrollbar {
+  display: none; /* 隐藏导航栏滚动条 */
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    margin: 1px;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -73,5 +165,48 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+  
+  /* 浅色主题下的滚动条样式 */
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05); /* 浅色主题轨道 */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  }
+  
+  ::-webkit-scrollbar-corner {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Firefox浅色主题滚动条 */
+  * {
+    scrollbar-color: #667eea rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 卡片内滚动条浅色主题 */
+  .card::-webkit-scrollbar-track,
+  .settings-card::-webkit-scrollbar-track,
+  .control-card::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  
+  .card::-webkit-scrollbar-thumb,
+  .settings-card::-webkit-scrollbar-thumb,
+  .control-card::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  .card::-webkit-scrollbar-thumb:hover,
+  .settings-card::-webkit-scrollbar-thumb:hover,
+  .control-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
   }
 }

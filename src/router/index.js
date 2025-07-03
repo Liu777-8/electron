@@ -3,7 +3,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Home from '../views/Home.vue'
-import DrinkWater from '../views/DrinkWater/DrinkWater.vue'
+import RestReminder from '../views/RestReminder/RestReminder.vue'
 
 const routes = [
   {
@@ -12,9 +12,9 @@ const routes = [
     component: Home,
   },
   {
-    path: '/drink-water',
-    name: 'DrinkWater',
-    component: DrinkWater,
+    path: '/rest-reminder',
+    name: 'RestReminder',
+    component: RestReminder,
   },
 ]
 

@@ -46,6 +46,7 @@ const route = useRoute()
 const pageConfig = {
   'Home': { title: '首页', icon: '🏠' },
   'DrinkWater': { title: '喝水提醒', icon: '💧' },
+  'RestReminder': { title: '休息提醒', icon: '⏰' },
   // 可以在这里添加更多页面配置
 }
 
@@ -92,8 +93,7 @@ const goBack = () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 /* 面包屑导航 */
