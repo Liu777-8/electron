@@ -4,6 +4,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Home from '../views/Home.vue'
 import RestReminder from '../views/RestReminder/RestReminder.vue'
+import HealthStats from '../views/HealthStats/HealthStats.vue'
 
 const routes = [
   {
@@ -15,6 +16,11 @@ const routes = [
     path: '/rest-reminder',
     name: 'RestReminder',
     component: RestReminder,
+  },
+  {
+    path: '/health-stats',
+    name: 'HealthStats',
+    component: HealthStats,
   },
 ]
 

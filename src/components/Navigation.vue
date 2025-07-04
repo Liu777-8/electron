@@ -3,27 +3,27 @@
     <div class="nav-content">
       <!-- 面包屑导航 -->
       <div class="breadcrumb">
-        <button 
-          class="breadcrumb-item home" 
+        <button
+          class="breadcrumb-item home"
           @click="navigateToHome"
           :class="{ active: isHome }"
         >
           <span class="breadcrumb-icon">🏠</span>
           <span class="breadcrumb-text">首页</span>
         </button>
-        
+
         <span v-if="!isHome" class="breadcrumb-separator">></span>
-        
+
         <span v-if="!isHome" class="breadcrumb-item current">
           <span class="breadcrumb-icon">{{ currentPageIcon }}</span>
           <span class="breadcrumb-text">{{ currentPageTitle }}</span>
         </span>
       </div>
-      
+
       <!-- 返回按钮 -->
-      <button 
-        v-if="!isHome" 
-        class="back-button" 
+      <button
+        v-if="!isHome"
+        class="back-button"
         @click="goBack"
         title="返回上一页"
       >
@@ -35,44 +35,43 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
 // 路由相关
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 
 // 页面配置映射
 const pageConfig = {
-  'Home': { title: '首页', icon: '🏠' },
-  'DrinkWater': { title: '喝水提醒', icon: '💧' },
-  'RestReminder': { title: '休息提醒', icon: '⏰' },
-  // 可以在这里添加更多页面配置
-}
+  Home: { title: "首页", icon: "🏠" },
+  HealthStats: { title: "健康统计", icon: "💧" },
+  RestReminder: { title: "休息提醒", icon: "⏰" },
+};
 
 // 计算属性
-const isHome = computed(() => route.name === 'Home')
+const isHome = computed(() => route.name === "Home");
 const currentPageTitle = computed(() => {
-  return pageConfig[route.name]?.title || '未知页面'
-})
+  return pageConfig[route.name]?.title || "未知页面";
+});
 const currentPageIcon = computed(() => {
-  return pageConfig[route.name]?.icon || '📄'
-})
+  return pageConfig[route.name]?.icon || "📄";
+});
 
 // 导航方法
 const navigateToHome = () => {
-  router.push('/')
-}
+  router.push("/");
+};
 
 const goBack = () => {
   // 优先使用浏览器历史记录返回
   if (window.history.length > 1) {
-    router.go(-1)
+    router.go(-1);
   } else {
     // 如果没有历史记录，则返回首页
-    router.push('/')
+    router.push("/");
   }
-}
+};
 </script>
 
 <style scoped>
@@ -188,21 +187,21 @@ const goBack = () => {
   .nav-content {
     padding: 10px 16px;
   }
-  
+
   .breadcrumb-item {
     padding: 4px 8px;
     font-size: 12px;
   }
-  
+
   .breadcrumb-text {
     display: none;
   }
-  
+
   .back-button {
     padding: 6px 12px;
     font-size: 12px;
   }
-  
+
   .back-text {
     display: none;
   }
@@ -212,11 +211,11 @@ const goBack = () => {
   .nav-content {
     padding: 8px 12px;
   }
-  
+
   .breadcrumb-item {
     padding: 4px 6px;
   }
-  
+
   .back-button {
     padding: 4px 8px;
   }

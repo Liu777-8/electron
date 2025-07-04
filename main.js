@@ -1,21 +1,52 @@
 // main.js
 
 // 控制应用生命周期和创建原生浏览器窗口的模块
-import { app, BrowserWindow, Menu, dialog } from "electron";
+import { app, BrowserWindow, Menu, dialog, Tray, nativeImage } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 全局变量
+let mainWindow = null;
+let tray = null;
+
+// 应用退出标志
+app.isQuiting = false;
+
 function createWindow() {
   // 创建浏览器窗口。
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+  mainWindow = new BrowserWindow({
+    width: 850,
+    height: 700,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
+  });
+
+  // 监听窗口关闭事件，阻止默认行为，改为隐藏窗口
+  mainWindow.on("close", (event) => {
+    // 如果不是真正退出，则阻止窗口关闭并隐藏到托盘
+    if (!app.isQuiting) {
+      event.preventDefault();
+      // 隐藏窗口到系统托盘
+      mainWindow.hide();
+
+      // 在Windows系统中显示提示信息（仅在隐藏到托盘时）
+      if (process.platform === "win32") {
+        // 可以选择显示一个通知，告知用户应用已最小化到托盘
+        // 这里注释掉，避免每次都弹出提示
+        // dialog.showMessageBox({
+        //   type: 'info',
+        //   title: '应用已最小化',
+        //   message: '健康提醒助手已最小化到系统托盘，将在后台继续运行。',
+        //   detail: '右键点击托盘图标可以退出应用。',
+        //   buttons: ['确定']
+        // });
+      }
+    }
+    // 如果是真正退出（app.isQuiting = true），则允许窗口正常关闭
   });
 
   // 加载 index.html
@@ -32,6 +63,65 @@ function createWindow() {
   }
 
   // 打开开发工具
+}
+
+// 创建系统托盘
+function createTray() {
+  // 创建托盘图标
+  const iconPath = path.join(__dirname, "public/icon.png");
+  const trayIcon = nativeImage.createFromPath(iconPath);
+
+  // 调整图标大小适配系统托盘
+  tray = new Tray(trayIcon.resize({ width: 16, height: 16 }));
+
+  // 设置托盘提示文本
+  tray.setToolTip("健康提醒助手 - 后台运行中");
+
+  // 创建托盘右键菜单
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "显示主窗口",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      },
+    },
+    {
+      label: "关于应用",
+      click: () => {
+        dialog.showMessageBox({
+          type: "info",
+          title: "关于健康提醒助手",
+          message: "健康提醒助手 v1.0.0",
+          detail:
+            "一个帮助您养成健康习惯的桌面应用\n\n当前状态：后台运行中\n定时提醒功能：已启用",
+          buttons: ["确定"],
+        });
+      },
+    },
+    { type: "separator" },
+    {
+      label: "退出应用",
+      click: () => {
+        // 真正退出应用
+        app.isQuiting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  // 设置托盘右键菜单
+  tray.setContextMenu(contextMenu);
+
+  // 双击托盘图标显示主窗口
+  tray.on("double-click", () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 }
 
 // 创建中文菜单
@@ -132,14 +222,14 @@ function createMenu() {
             if (focusedWindow) focusedWindow.webContents.toggleDevTools();
           },
         },
-        { type: "separator" },
-        {
-          label: "实际大小",
-          accelerator: "CmdOrCtrl+0",
-          click: (item, focusedWindow) => {
-            if (focusedWindow) focusedWindow.webContents.zoomLevel = 0;
-          },
-        },
+        // { type: "separator" },
+        // {
+        //   label: "实际大小",
+        //   accelerator: "CmdOrCtrl+0",
+        //   click: (item, focusedWindow) => {
+        //     if (focusedWindow) focusedWindow.webContents.zoomLevel = 0;
+        //   },
+        // },
         // {
         //   label: "放大",
         //   accelerator: "CmdOrCtrl+Plus",
@@ -205,52 +295,52 @@ function createMenu() {
             });
           },
         },
-        {
-          label: "检查更新",
-          click: () => {
-            // 检查更新功能
-            dialog.showMessageBox({
-              type: "info",
-              title: "检查更新",
-              message: "当前已是最新版本",
-              detail:
-                "版本 1.0.0\n\n您当前使用的是最新版本，无需更新。\n\n如需获取最新功能和修复，请关注我们的更新通知。",
-              buttons: ["确定"],
-              defaultId: 0,
-            });
-          },
-        },
-        { type: "separator" },
-        {
-          label: "用户手册",
-          click: () => {
-            // 用户手册功能
-            dialog.showMessageBox({
-              type: "info",
-              title: "用户手册",
-              message: "使用指南",
-              detail:
-                '快速上手指南：\n\n1. 饮水提醒\n   • 设置提醒间隔时间\n   • 点击"开始提醒"启动定时提醒\n   • 收到提醒后点击"记录饮水"\n\n2. 统计功能\n   • 查看今日饮水次数和总量\n   • 追踪饮水习惯趋势\n\n3. 个性化设置\n   • 自定义提醒间隔\n   • 调整提醒音效\n   • 设置每日目标\n\n4. 快捷操作\n   • 使用快捷键快速记录\n   • 一键重置统计数据\n\n如需更多帮助，请查看应用内的详细说明。',
-              buttons: ["确定"],
-              defaultId: 0,
-            });
-          },
-        },
-        {
-          label: "反馈建议",
-          click: () => {
-            // 反馈建议功能
-            dialog.showMessageBox({
-              type: "info",
-              title: "反馈建议",
-              message: "我们重视您的意见",
-              detail:
-                "感谢您使用健康提醒助手！\n\n如果您有任何建议、问题或功能需求，\n欢迎通过以下方式联系我们：\n\n📧 邮箱反馈\n💬 在线客服\n🐛 问题报告\n⭐ 功能建议\n\n您的反馈将帮助我们不断改进产品，\n为您提供更好的使用体验。",
-              buttons: ["确定"],
-              defaultId: 0,
-            });
-          },
-        },
+        // {
+        //   label: "检查更新",
+        //   click: () => {
+        //     // 检查更新功能
+        //     dialog.showMessageBox({
+        //       type: "info",
+        //       title: "检查更新",
+        //       message: "当前已是最新版本",
+        //       detail:
+        //         "版本 1.0.0\n\n您当前使用的是最新版本，无需更新。\n\n如需获取最新功能和修复，请关注我们的更新通知。",
+        //       buttons: ["确定"],
+        //       defaultId: 0,
+        //     });
+        //   },
+        // },
+        // { type: "separator" },
+        // {
+        //   label: "用户手册",
+        //   click: () => {
+        //     // 用户手册功能
+        //     dialog.showMessageBox({
+        //       type: "info",
+        //       title: "用户手册",
+        //       message: "使用指南",
+        //       detail:
+        //         '快速上手指南：\n\n1. 饮水提醒\n   • 设置提醒间隔时间\n   • 点击"开始提醒"启动定时提醒\n   • 收到提醒后点击"记录饮水"\n\n2. 统计功能\n   • 查看今日饮水次数和总量\n   • 追踪饮水习惯趋势\n\n3. 个性化设置\n   • 自定义提醒间隔\n   • 调整提醒音效\n   • 设置每日目标\n\n4. 快捷操作\n   • 使用快捷键快速记录\n   • 一键重置统计数据\n\n如需更多帮助，请查看应用内的详细说明。',
+        //       buttons: ["确定"],
+        //       defaultId: 0,
+        //     });
+        //   },
+        // },
+        // {
+        //   label: "反馈建议",
+        //   click: () => {
+        //     // 反馈建议功能
+        //     dialog.showMessageBox({
+        //       type: "info",
+        //       title: "反馈建议",
+        //       message: "我们重视您的意见",
+        //       detail:
+        //         "感谢您使用健康提醒助手！\n\n如果您有任何建议、问题或功能需求，\n欢迎通过以下方式联系我们：\n\n📧 邮箱反馈\n💬 在线客服\n🐛 问题报告\n⭐ 功能建议\n\n您的反馈将帮助我们不断改进产品，\n为您提供更好的使用体验。",
+        //       buttons: ["确定"],
+        //       defaultId: 0,
+        //     });
+        //   },
+        // },
       ],
     },
   ];
@@ -307,6 +397,7 @@ function createMenu() {
 app.whenReady().then(() => {
   createMenu();
   createWindow();
+  createTray(); // 创建系统托盘
 
   app.on("activate", function () {
     // 在 macOS 系统内, 如果没有已开启的应用窗口
@@ -319,7 +410,14 @@ app.whenReady().then(() => {
 // 因此, 通常对应用程序和它们的菜单栏来说应该时刻保持激活状态,
 // 直到用户使用 Cmd + Q 明确退出
 app.on("window-all-closed", function () {
-  if (process.platform !== "darwin") app.quit();
+  // 在Windows和Linux中，当所有窗口关闭时不退出应用
+  // 应用将继续在后台运行，通过系统托盘进行管理
+  // if (process.platform !== "darwin") app.quit();
+
+  // 只有在明确退出时才真正关闭应用
+  if (app.isQuiting) {
+    app.quit();
+  }
 });
 
 // 在这个文件中，你可以包含应用程序剩余的所有部分的主进程代码。

@@ -27,7 +27,7 @@
                 title="点击记录饮水"
               >
                 <div class="stat-icon">💧</div>
-                <div class="stat-value">{{ todayStats.water }}</div>
+                <div class="stat-value">{{ healthStore.todayStats.water }}</div>
                 <div class="stat-label">饮水次数</div>
               </div>
               <div
@@ -36,7 +36,9 @@
                 title="点击记录运动"
               >
                 <div class="stat-icon">🏃‍♂️</div>
-                <div class="stat-value">{{ todayStats.exercise }}</div>
+                <div class="stat-value">
+                  {{ healthStore.todayStats.exercise }}
+                </div>
                 <div class="stat-label">运动次数</div>
               </div>
               <div
@@ -45,13 +47,13 @@
                 title="点击记录休息"
               >
                 <div class="stat-icon">😴</div>
-                <div class="stat-value">{{ todayStats.rest }}</div>
+                <div class="stat-value">{{ healthStore.todayStats.rest }}</div>
                 <div class="stat-label">休息次数</div>
               </div>
 
               <div class="stat-item highlight">
                 <div class="stat-icon">🔔</div>
-                <div class="stat-value">{{ reminderCount }}</div>
+                <div class="stat-value">{{ healthStore.reminderCount }}</div>
                 <div class="stat-label">提醒次数</div>
               </div>
             </div>
@@ -70,12 +72,36 @@
                     :key="interval.value"
                     :class="[
                       'interval-card',
-                      { active: customInterval === interval.value },
+                      { active: healthStore.customInterval === interval.value },
                     ]"
-                    @click="customInterval = interval.value"
+                    @click="healthStore.customInterval = interval.value"
                   >
                     <div class="interval-time">{{ interval.label }}</div>
                     <div class="interval-desc">{{ interval.desc }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第二组：休息间隔 -->
+            <div class="settings-row">
+              <!-- 休息间隔选择 -->
+              <div class="setting-group full-width">
+                <label class="setting-label">休息间隔</label>
+                <div class="interval-cards">
+                  <div
+                    v-for="restInterval in restIntervalOptions"
+                    :key="restInterval.value"
+                    :class="[
+                      'interval-card',
+                      {
+                        active: healthStore.restInterval === restInterval.value,
+                      },
+                    ]"
+                    @click="healthStore.restInterval = restInterval.value"
+                  >
+                    <div class="interval-time">{{ restInterval.label }}</div>
+                    <div class="interval-desc">{{ restInterval.desc }}</div>
                   </div>
                 </div>
               </div>
@@ -92,7 +118,7 @@
                   <div class="preview-card">
                     <div class="preview-title">健康提醒</div>
                     <div class="preview-content">
-                      {{ reminderMessage }}
+                      {{ healthStore.reminderMessage }}
                     </div>
                   </div>
                 </div>
@@ -108,17 +134,20 @@
                     :class="[
                       'control-btn',
                       'primary',
-                      { active: isReminderActive },
+                      { active: healthStore.isReminderActive },
                     ]"
-                    @click="toggleReminder"
+                    @click="healthStore.toggleReminder"
                   >
                     <span class="btn-icon">{{
-                      isReminderActive ? "⏸️" : "▶️"
+                      healthStore.isReminderActive ? "⏸️" : "▶️"
                     }}</span>
-                    {{ isReminderActive ? "暂停提醒" : "开始提醒" }}
+                    {{ healthStore.isReminderActive ? "暂停提醒" : "开始提醒" }}
                   </button>
 
-                  <button class="control-btn secondary" @click="testReminder">
+                  <button
+                    class="control-btn secondary"
+                    @click="healthStore.testReminder"
+                  >
                     <span class="btn-icon">🔔</span>
                     测试提醒
                   </button>
@@ -131,22 +160,53 @@
                     <span
                       :class="[
                         'status-value',
-                        isReminderActive ? 'active' : 'inactive',
+                        healthStore.isReminderActive ? 'active' : 'inactive',
                       ]"
                     >
-                      {{ isReminderActive ? "运行中" : "已停止" }}
+                      {{ healthStore.isReminderActive ? "运行中" : "已停止" }}
                     </span>
                   </div>
+
+                  <!-- 当前阶段显示 -->
+                  <div class="status-item" v-if="healthStore.isReminderActive">
+                    <span class="status-label">当前阶段：</span>
+                    <span
+                      :class="[
+                        'status-value',
+                        'phase-indicator',
+                        healthStore.currentPhase === 'reminding'
+                          ? 'reminding-phase'
+                          : 'resting-phase',
+                      ]"
+                    >
+                      {{
+                        healthStore.currentPhase === "reminding"
+                          ? "⏰ 提醒间隔"
+                          : "😴 休息间隔"
+                      }}
+                    </span>
+                  </div>
+
                   <div
                     class="status-item"
-                    v-if="isReminderActive && nextReminderTime"
+                    v-if="
+                      healthStore.isReminderActive &&
+                      healthStore.nextReminderTime
+                    "
                   >
-                    <span class="status-label">下次提醒：</span>
-                    <span class="status-value">{{
-                      formatTime(nextReminderTime)
+                    <span class="status-label">{{
+                      healthStore.currentPhase === "reminding"
+                        ? "下次提醒："
+                        : "休息结束："
                     }}</span>
-                    <span class="countdown-display" v-if="countdown">
-                      ({{ countdown }})
+                    <span class="status-value">{{
+                      healthStore.formatTime(healthStore.nextReminderTime)
+                    }}</span>
+                    <span
+                      class="countdown-display"
+                      v-if="healthStore.countdown"
+                    >
+                      ({{ healthStore.countdown }})
                     </span>
                   </div>
                 </div>
@@ -155,7 +215,7 @@
                 <div class="notification-section">
                   <div class="notification-select">
                     <select
-                      v-model="notificationType"
+                      v-model="healthStore.notificationType"
                       class="notification-dropdown"
                     >
                       <option value="notification">系统通知</option>
@@ -167,7 +227,7 @@
 
                 <!-- 重置按钮 -->
                 <div class="reset-section">
-                  <button class="control-btn reset" @click="resetStats">
+                  <button class="control-btn reset" @click="handleResetStats">
                     <span class="btn-icon">🔄</span>
                     重置统计
                   </button>
@@ -182,14 +242,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
+import { useHealthReminderStore } from "@/store/healthReminder.js";
 
-// 今日统计数据
-const todayStats = reactive({
-  water: 0, // 饮水次数
-  exercise: 0, // 运动次数
-  rest: 0, // 休息次数
-});
+// 使用全局健康提醒状态管理
+const healthStore = useHealthReminderStore();
+
+// 注意：不要解构响应式状态，直接使用 store 对象以保持响应性
 
 // 提醒间隔选项配置
 const intervalOptions = [
@@ -200,238 +259,59 @@ const intervalOptions = [
   { value: 60, label: "60分钟", desc: "低频提醒" },
 ];
 
-// 提醒设置
-const customInterval = ref(45); // 提醒间隔（分钟），默认30分钟
-const notificationType = ref("notification"); // 提醒方式：notification, sound, both，默认系统通知
-const isReminderActive = ref(false); // 提醒是否激活
-const nextReminderTime = ref(null); // 下次提醒时间
-const reminderCount = ref(0); // 今日提醒次数
-const countdown = ref(""); // 倒计时显示
+// 休息间隔选项配置
+const restIntervalOptions = [
+  { value: 5, label: "5分钟", desc: "短暂休息" },
+  { value: 10, label: "10分钟", desc: "快速恢复" },
+  { value: 15, label: "15分钟", desc: "标准休息" },
+  { value: 20, label: "20分钟", desc: "充分休息" },
+  { value: 30, label: "30分钟", desc: "深度休息" },
+];
 
-// 定时器
-let reminderTimer = null;
-let countdownTimer = null; // 倒计时定时器
-
-// 统一的提醒消息，包含健康行为
-const reminderMessage = computed(() => {
-  return `健康提醒时间到了！\n\n💧 记得喝水，保持身体水分充足\n🏃‍♂️ 适当运动，增强身体活力\n😴 注意休息，保护视力缓解疲劳\n\n让我们一起养成健康的生活习惯！`;
-});
-
-// 开始/暂停提醒
-const toggleReminder = () => {
-  if (isReminderActive.value) {
-    stopReminder();
-  } else {
-    startReminder();
-  }
-};
-
-// 开始提醒
-const startReminder = () => {
-  isReminderActive.value = true;
-  scheduleNextReminder();
-  console.log("健康提醒已启动");
-};
-
-// 停止提醒
-const stopReminder = () => {
-  isReminderActive.value = false;
-  nextReminderTime.value = null;
-  countdown.value = "";
-  if (reminderTimer) {
-    clearTimeout(reminderTimer);
-    reminderTimer = null;
-  }
-  if (countdownTimer) {
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-  }
-  console.log("健康提醒已停止");
-};
-
-// 安排下次提醒
-const scheduleNextReminder = () => {
-  if (!isReminderActive.value) return;
-
-  const intervalMs = customInterval.value * 60 * 1000;
-  nextReminderTime.value = new Date(Date.now() + intervalMs);
-
-  // 启动倒计时
-  startCountdown();
-
-  reminderTimer = setTimeout(() => {
-    handleRemind();
-    if (isReminderActive.value) {
-      scheduleNextReminder();
-    }
-  }, intervalMs);
-};
-
-// 处理提醒事件
-const handleRemind = () => {
-  // 增加提醒次数
-  reminderCount.value++;
-
-  // 发送通知
-  sendNotification("健康提醒", reminderMessage.value, "⏰");
-
-  // 播放提示音
-  if (notificationType.value === "sound" || notificationType.value === "both") {
-    playNotificationSound();
-  }
-};
-
-// 测试提醒
-const testReminder = () => {
-  sendNotification("健康提醒（测试）", reminderMessage.value, "⏰");
-
-  if (notificationType.value === "sound" || notificationType.value === "both") {
-    playNotificationSound();
-  }
-};
-
-// 发送通知
-const sendNotification = (title, body, icon) => {
-  if (notificationType.value === "sound") return;
-
-  // 检查是否在 Electron 环境中
-  if (window.electronAPI && window.electronAPI.showNotification) {
-    window.electronAPI.showNotification({
-      title,
-      body,
-      icon,
-    });
-  } else {
-    // 浏览器环境
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification(title, { body, icon });
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then((permission) => {
-          if (permission === "granted") {
-            new Notification(title, { body, icon });
-          }
-        });
-      }
-    }
-  }
-};
-
-// 播放提示音
-const playNotificationSound = () => {
-  try {
-    const audio = new Audio("/notification.mp3");
-    audio.play().catch((e) => {
-      console.log("无法播放提示音:", e);
-    });
-  } catch (e) {
-    console.log("提示音播放失败:", e);
-  }
-};
-
-// 记录操作
-const recordAction = (type) => {
-  if (todayStats[type] !== undefined) {
-    todayStats[type]++;
-    console.log(`已记录${getActionName(type)}操作`);
-  }
-};
-
-// 获取操作名称
-const getActionName = (type) => {
-  const names = {
-    water: "饮水",
-    exercise: "运动",
-    rest: "休息",
-  };
-  return names[type] || type;
-};
-
-// 重置统计
-const resetStats = () => {
+// 重置统计（添加确认对话框）
+const handleResetStats = () => {
   if (confirm("确定要重置今日统计数据吗？")) {
-    todayStats.water = 0;
-    todayStats.exercise = 0;
-    todayStats.rest = 0;
-    reminderCount.value = 0;
-    console.log("统计数据已重置");
+    healthStore.resetStats();
   }
 };
 
-// 格式化时间（精确到秒）
-const formatTime = (date) => {
-  if (!date) return "";
-  return date.toLocaleTimeString("zh-CN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-};
-
-// 启动倒计时
-const startCountdown = () => {
-  // 清除之前的倒计时定时器
-  if (countdownTimer) {
-    clearInterval(countdownTimer);
-  }
-
-  // 立即更新一次倒计时
-  updateCountdown();
-
-  // 每秒更新倒计时
-  countdownTimer = setInterval(() => {
-    updateCountdown();
-  }, 1000);
-};
-
-// 更新倒计时显示
-const updateCountdown = () => {
-  if (!nextReminderTime.value || !isReminderActive.value) {
-    countdown.value = "";
-    return;
-  }
-
-  const now = new Date();
-  const timeDiff = nextReminderTime.value.getTime() - now.getTime();
-
-  if (timeDiff <= 0) {
-    countdown.value = "即将提醒";
-    return;
-  }
-
-  // 计算剩余时间
-  const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-
-  // 格式化倒计时显示
-  if (hours > 0) {
-    countdown.value = `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  } else {
-    countdown.value = `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  }
+// 记录动作
+const recordAction = (actionType) => {
+  healthStore.recordAction(actionType);
 };
 
 // 组件挂载时的初始化
 onMounted(() => {
-  // 可以从本地存储加载数据
-  console.log("健康提醒模块已加载");
+  // 恢复定时器状态（如果之前有运行中的定时器）
+  healthStore.restoreTimerState();
+  console.log("健康提醒模块已加载，定时器状态已恢复");
+
+  // 设置定期自动保存（每5分钟保存一次今日数据）
+  const autoSaveInterval = setInterval(() => {
+    // 只有当今日有数据时才保存
+    const { water, exercise, rest } = healthStore.todayStats;
+    if (
+      water > 0 ||
+      exercise > 0 ||
+      rest > 0 ||
+      healthStore.reminderCount > 0
+    ) {
+      healthStore.saveTodayToHistory();
+      console.log("自动保存今日健康数据");
+    }
+  }, 5 * 60 * 1000); // 5分钟
+
+  // 页面卸载时清除定时器
+  onUnmounted(() => {
+    clearInterval(autoSaveInterval);
+  });
 });
 
-// 组件卸载时清理
+// 组件卸载时的处理
 onUnmounted(() => {
-  if (reminderTimer) {
-    clearTimeout(reminderTimer);
-    reminderTimer = null;
-  }
-  if (countdownTimer) {
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-  }
+  // 不清除定时器，让它在后台继续运行
+  // 这样即使切换页面，定时器也会继续工作
+  console.log("健康提醒模块已卸载，但定时器继续在后台运行");
 });
 </script>
 
@@ -901,6 +781,24 @@ onUnmounted(() => {
 
 .status-item:last-child {
   margin-bottom: 0;
+}
+
+/* 阶段指示器样式 */
+.phase-indicator {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.reminding-phase {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.resting-phase {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
 }
 
 .status-label {

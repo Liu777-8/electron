@@ -1,10 +1,16 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
   base: './',
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
   build: {
     target: 'esnext',
     // 确保依赖被正确打包
@@ -17,6 +23,6 @@ export default defineConfig({
   },
   // 优化依赖预构建，确保vue-router等依赖被正确处理
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'axios']
+    include: ['vue', 'vue-router', 'pinia']
   }
 })

@@ -6,13 +6,18 @@
       <p class="subtitle">让我们一起养成健康的生活习惯</p>
     </div>
 
+    <!-- 日历组件 -->
+    <Calendar />
+
     <!-- 功能模块卡片 -->
     <div class="modules-grid">
       <!-- 统一的休息提醒模块 -->
       <div class="module-card" @click="navigateTo('/rest-reminder')">
         <div class="module-icon">⏰</div>
         <h3 class="module-title">休息提醒</h3>
-        <p class="module-description">统一管理喝水、运动、休息、饮食等健康提醒</p>
+        <p class="module-description">
+          统一管理喝水、运动、休息、饮食等健康提醒
+        </p>
         <div class="module-status">
           <span class="status-badge">可用</span>
         </div>
@@ -20,19 +25,20 @@
           <span class="feature-tag">💧 喝水</span>
           <span class="feature-tag">🏃‍♂️ 运动</span>
           <span class="feature-tag">😴 休息</span>
-          <span class="feature-tag">🍎 饮食</span>
         </div>
       </div>
 
-      <!-- 预留的其他功能模块 -->
-      <div class="module-card coming-soon">
+      <!-- 健康统计模块 -->
+      <div class="module-card" @click="navigateTo('/health-stats')">
         <div class="module-icon">📊</div>
         <h3 class="module-title">健康统计</h3>
         <p class="module-description">查看详细的健康数据统计和分析</p>
         <div class="module-status">
-          <span class="status-badge coming">即将推出</span>
+          <span class="status-badge available">可用</span>
         </div>
       </div>
+
+      <!-- 预留的其他功能模块 -->
 
       <div class="module-card coming-soon">
         <div class="module-icon">⚙️</div>
@@ -54,7 +60,7 @@
     </div>
 
     <!-- 快速操作区 -->
-    <div class="quick-actions">
+    <!-- <div class="quick-actions">
       <h2>快速操作</h2>
       <div class="actions-grid">
         <button class="action-btn" @click="navigateTo('/rest-reminder')">
@@ -66,12 +72,13 @@
           设置中心
         </button>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup>
 import { useRouter } from "vue-router";
+import Calendar from "@/components/Calendar.vue";
 
 // 获取路由实例
 const router = useRouter();
@@ -88,17 +95,16 @@ const navigateTo = (path) => {
   height: 100%;
   font-family: "Arial", sans-serif;
   overflow-y: auto;
-  padding: 16px;
+  padding: 8px 16px; /* 减少上下内边距 */
 }
 
 .header {
   text-align: center;
-  margin-bottom: 40px;
-  padding: 40px 0;
+  margin-bottom: 20px; /* 减少下边距 */
+  padding: 30px 0; /* 减少内边距 */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 20px;
-  margin-bottom: 40px;
 }
 
 .title {
@@ -185,6 +191,11 @@ const navigateTo = (path) => {
 .status-badge.coming {
   background: #ffc107;
   color: #212529;
+}
+
+.status-badge.available {
+  background: #28a745;
+  color: white;
 }
 
 .module-features {
