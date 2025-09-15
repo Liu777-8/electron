@@ -47,6 +47,7 @@ const pageConfig = {
   Home: { title: "首页", icon: "🏠" },
   HealthStats: { title: "健康统计", icon: "💧" },
   RestReminder: { title: "休息提醒", icon: "⏰" },
+  Novel: { title: "小说阅读", icon: "📚" },
 };
 
 // 计算属性

@@ -22,6 +22,10 @@ function createWindow() {
     height: 700,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      enableRemoteModule: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: true,
     },
   });
 
@@ -56,13 +60,11 @@ function createWindow() {
 
   // and load the index.html of the app.
   if (process.env.NODE_ENV === "development") {
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
     mainWindow.loadURL(devServerURL);
   } else {
     mainWindow.loadFile(path.join(__dirname, "dist/index.html"));
   }
-
-  // 打开开发工具
 }
 
 // 创建系统托盘

@@ -6,9 +6,15 @@
         <span>‹</span>
       </button>
       <h3 class="month-year">{{ currentYear }}年{{ currentMonth }}月</h3>
-      <button class="nav-btn" @click="nextMonth">
-        <span>›</span>
-      </button>
+      <div class="header-right">
+        <button class="weather-btn" @click="openWeatherModal" title="查看天气预报">
+          <span class="weather-btn-icon">🌤️</span>
+          <span class="weather-btn-text">天气</span>
+        </button>
+        <button class="nav-btn" @click="nextMonth">
+          <span>›</span>
+        </button>
+      </div>
     </div>
 
     <!-- 星期标题 -->
@@ -29,6 +35,7 @@
             'other-month': !date.isCurrentMonth,
             today: date.isToday,
             'has-festival': date.festival,
+            'has-memo': hasMemo(date),
           },
         ]"
         @click="selectDate(date)"
@@ -37,10 +44,90 @@
         <div v-if="date.festival" class="festival-info">
           <span class="festival-name">{{ date.festival }}</span>
         </div>
+        <div v-else-if="hasMemo(date)" class="memo-indicator">
+          <span class="memo-dot">📝</span>
+        </div>
       </div>
     </div>
 
-    <!-- 节日详情已整合到天气弹窗中 -->
+    <!-- 节日信息弹窗 -->
+    <div
+      v-if="showFestivalModal"
+      class="festival-modal"
+      @click="closeFestivalModal"
+    >
+      <div class="festival-content" @click.stop>
+        <div class="festival-header">
+          <h4>
+            <span class="festival-icon">🎉</span>
+            {{ selectedDate?.year }}年{{ selectedDate?.month }}月{{ selectedDate?.day }}日
+          </h4>
+          <button class="close-btn" @click="closeFestivalModal">×</button>
+        </div>
+        <div class="festival-body">
+          <div class="festival-title">
+            <span class="festival-icon-large">🎊</span>
+            <h3>{{ selectedDate?.festival }}</h3>
+          </div>
+          <p class="festival-description">
+            {{ getFestivalDescription(selectedDate?.festival) }}
+          </p>
+          <div class="festival-actions">
+            <button class="memo-btn" @click="switchToMemoModal">
+              <span class="btn-icon">📝</span>
+              编写备忘录
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 备忘录弹窗 -->
+    <div
+      v-if="showMemoModal"
+      class="memo-modal"
+      @click="closeMemoModal"
+    >
+      <div class="memo-content" @click.stop>
+        <div class="memo-header">
+          <h4>
+            <span class="memo-icon">📝</span>
+            {{ selectedDate?.year }}年{{ selectedDate?.month }}月{{ selectedDate?.day }}日 备忘录
+            <span v-if="selectedDate?.festival" class="festival-tag">{{ selectedDate.festival }}</span>
+          </h4>
+          <button class="close-btn" @click="closeMemoModal">×</button>
+        </div>
+        <div class="memo-body">
+          <div v-if="selectedDate?.festival" class="festival-info-in-memo">
+            <div class="festival-title-small">
+              <span class="festival-icon-small">🎉</span>
+              <span class="festival-name-small">{{ selectedDate.festival }}</span>
+            </div>
+            <p class="festival-desc-small">{{ getFestivalDescription(selectedDate.festival) }}</p>
+          </div>
+          <textarea
+            v-model="currentMemo"
+            class="memo-textarea"
+            :placeholder="selectedDate?.festival ? '在这个特殊的日子里，记录下你的想法...' : '请输入备忘录内容...'"
+            rows="6"
+          ></textarea>
+          <div class="memo-actions">
+            <button class="save-btn" @click="saveMemo">
+              <span class="btn-icon">💾</span>
+              保存
+            </button>
+            <button 
+              v-if="currentMemo.trim() || hasMemo(selectedDate)"
+              class="delete-btn" 
+              @click="deleteMemo"
+            >
+              <span class="btn-icon">🗑️</span>
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 天气信息弹窗 -->
     <div
@@ -49,22 +136,15 @@
       @click="closeWeatherModal"
     >
       <div class="weather-content" @click.stop>
-        <div
-          class="weather-header"
-          :class="{ 'festival-header-style': selectedDate?.festival }"
-        >
+        <div class="weather-header">
           <h4>
-            <span class="weather-icon">{{
-              selectedDate?.festival ? "🎉" : "🌤️"
-            }}</span>
-            {{ selectedDate?.year }}年{{ selectedDate?.month }}月{{
-              selectedDate?.day
-            }}日 天气预报
+            <span class="weather-icon">🌤️</span>
+            {{ selectedCity }} 天气预报
           </h4>
           <div class="header-buttons">
-            <button 
-              class="refresh-btn" 
-              @click="refreshWeatherData" 
+            <button
+              class="refresh-btn"
+              @click="refreshWeatherData"
               :disabled="isLoadingWeather"
               title="刷新天气数据"
             >
@@ -75,18 +155,6 @@
         </div>
 
         <div class="weather-body">
-          <!-- 节日信息 -->
-          <div v-if="selectedDate?.festival" class="festival-info-section">
-            <div class="festival-title">
-              <span class="festival-icon">🎊</span>
-              <h3>{{ selectedDate.festival }}</h3>
-            </div>
-            <p class="festival-description">
-              {{ getFestivalDescription(selectedDate.festival) }}
-            </p>
-            <div class="festival-divider"></div>
-          </div>
-
           <!-- 加载状态 -->
           <div v-if="isLoadingWeather" class="loading-state">
             <div class="loading-spinner"></div>
@@ -198,10 +266,14 @@ const selectedDate = ref(null);
 const weatherData = ref(null);
 const isLoadingWeather = ref(false);
 const showWeatherModal = ref(false);
+const showFestivalModal = ref(false); // 节日信息弹窗显示状态
+const showMemoModal = ref(false); // 备忘录弹窗显示状态
 const showCitySelector = ref(false); // 城市选择器显示状态
 const selectedCity = ref("嘉兴市"); // 当前选择的城市
 const cityList = ref([]); // 城市列表数据
 const citySearchQuery = ref(""); // 城市搜索关键词
+const memos = ref(new Map()); // 备忘录数据 Map<dateKey, memoContent>
+const currentMemo = ref(""); // 当前编辑的备忘录内容
 
 // 天气数据缓存相关
 const weatherCache = ref(new Map()); // 天气数据缓存 Map<cityName, {data, timestamp}>
@@ -317,11 +389,79 @@ const nextMonth = () => {
   currentDate.value = newDate;
 };
 
-const selectDate = async (date) => {
+const selectDate = (date) => {
   selectedDate.value = date;
+  
+  // 所有日期都直接打开备忘录弹窗，节日信息在备忘录弹窗中显示
+  openMemoModal(date);
+};
 
-  // 统一获取天气信息，无论是否为节日
-  await getWeatherInfo(date);
+// 打开备忘录弹窗
+const openMemoModal = (date) => {
+  const dateKey = `${date.year}-${date.month}-${date.day}`;
+  currentMemo.value = memos.value.get(dateKey) || "";
+  showMemoModal.value = true;
+};
+
+// 保存备忘录
+const saveMemo = () => {
+  if (selectedDate.value) {
+    const dateKey = `${selectedDate.value.year}-${selectedDate.value.month}-${selectedDate.value.day}`;
+    
+    if (currentMemo.value.trim()) {
+      // 保存备忘录
+      memos.value.set(dateKey, currentMemo.value.trim());
+    } else {
+      // 删除空备忘录
+      memos.value.delete(dateKey);
+    }
+    
+    // 保存到本地存储
+    saveMemoToLocalStorage();
+    closeMemoModal();
+  }
+};
+
+// 删除备忘录
+const deleteMemo = () => {
+  if (selectedDate.value) {
+    const dateKey = `${selectedDate.value.year}-${selectedDate.value.month}-${selectedDate.value.day}`;
+    memos.value.delete(dateKey);
+    saveMemoToLocalStorage();
+    closeMemoModal();
+  }
+};
+
+// 关闭备忘录弹窗
+const closeMemoModal = () => {
+  showMemoModal.value = false;
+  currentMemo.value = "";
+  selectedDate.value = null;
+};
+
+// 保存备忘录到本地存储
+const saveMemoToLocalStorage = () => {
+  const memoData = Object.fromEntries(memos.value);
+  localStorage.setItem('calendar-memos', JSON.stringify(memoData));
+};
+
+// 从本地存储加载备忘录
+const loadMemoFromLocalStorage = () => {
+  try {
+    const savedMemos = localStorage.getItem('calendar-memos');
+    if (savedMemos) {
+      const memoData = JSON.parse(savedMemos);
+      memos.value = new Map(Object.entries(memoData));
+    }
+  } catch (error) {
+    console.error('加载备忘录失败:', error);
+  }
+};
+
+// 检查日期是否有备忘录
+const hasMemo = (date) => {
+  const dateKey = `${date.year}-${date.month}-${date.day}`;
+  return memos.value.has(dateKey);
 };
 
 // 获取天气信息的方法
@@ -379,10 +519,38 @@ const getWeatherInfo = async (date, forceRefresh = false) => {
   }
 };
 
+// 打开天气弹窗
+const openWeatherModal = async () => {
+  // 使用当前日期作为默认选择日期
+  const today = new Date();
+  selectedDate.value = {
+    year: today.getFullYear(),
+    month: today.getMonth() + 1,
+    day: today.getDate(),
+    festival: null
+  };
+  
+  await getWeatherInfo(selectedDate.value);
+};
+
 // 刷新天气数据
 const refreshWeatherData = async () => {
   if (selectedDate.value) {
     await getWeatherInfo(selectedDate.value, true); // 强制刷新
+  }
+};
+
+// 关闭节日弹窗
+const closeFestivalModal = () => {
+  showFestivalModal.value = false;
+  selectedDate.value = null;
+};
+
+// 从节日弹窗切换到备忘录弹窗
+const switchToMemoModal = () => {
+  showFestivalModal.value = false;
+  if (selectedDate.value) {
+    openMemoModal(selectedDate.value);
   }
 };
 
@@ -522,6 +690,8 @@ const getFestivalDescription = (festivalName) => {
 onMounted(() => {
   // 加载城市数据
   loadCityData();
+  // 加载备忘录数据
+  loadMemoFromLocalStorage();
 });
 
 // 组件卸载时恢复滚动
@@ -549,6 +719,42 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 天气按钮样式 */
+.weather-btn {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+.weather-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.weather-btn-icon {
+  font-size: 1rem;
+}
+
+.weather-btn-text {
+  font-size: 0.8rem;
 }
 
 .nav-btn {
@@ -646,6 +852,17 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
+.calendar-date.has-memo {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+}
+
+.calendar-date.has-memo:hover {
+  background: #ffeaa7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
 .date-number {
   font-size: 0.8rem;
   font-weight: 500;
@@ -664,7 +881,284 @@ onUnmounted(() => {
   line-height: 1.1;
 }
 
-/* 原节日弹窗样式已移除，节日信息已整合到天气弹窗中 */
+/* 备忘录指示器样式 */
+.memo-indicator {
+  text-align: center;
+}
+
+.memo-dot {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* 节日弹窗样式 */
+.festival-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.festival-content {
+  background: white;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 400px;
+  width: 90%;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.festival-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px 16px 0 0;
+}
+
+.festival-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.festival-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.festival-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.festival-icon-large {
+  font-size: 3rem;
+}
+
+.festival-title h3 {
+  margin: 0;
+  color: #28a745;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.festival-description {
+  color: #6c757d;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  font-size: 0.95rem;
+}
+
+.festival-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.memo-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.memo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.memo-btn:active {
+  transform: translateY(0);
+}
+
+/* 备忘录弹窗样式 */
+.memo-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.memo-content {
+  background: white;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.memo-header {
+  background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px 16px 0 0;
+}
+
+.memo-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.festival-tag {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.memo-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.festival-info-in-memo {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-left: 4px solid #e17055;
+}
+
+.festival-title-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.festival-icon-small {
+  font-size: 1rem;
+}
+
+.festival-name-small {
+  font-weight: 600;
+  color: #2d3436;
+  font-size: 0.9rem;
+}
+
+.festival-desc-small {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #636e72;
+  line-height: 1.4;
+}
+
+.memo-textarea {
+  width: 100%;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.memo-textarea:focus {
+  outline: none;
+  border-color: #ffc107;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+}
+
+.memo-textarea::placeholder {
+  color: #6c757d;
+}
+
+.memo-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.save-btn, .delete-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-icon {
+  font-size: 0.8rem;
+}
 
 /* 天气弹窗样式 */
 .weather-modal {
@@ -704,10 +1198,7 @@ onUnmounted(() => {
   transition: background 0.3s ease;
 }
 
-/* 节日头部样式 */
-.festival-header-style {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
+
 
 .weather-header h4 {
   margin: 0;
@@ -781,61 +1272,7 @@ onUnmounted(() => {
   min-height: 0; /* 确保flex子元素可以收缩 */
 }
 
-/* 节日信息部分 */
-.festival-info-section {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  animation: fadeIn 0.5s ease;
-}
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.festival-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.festival-icon {
-  font-size: 1.6rem;
-}
-
-.festival-title h3 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #28a745;
-}
-
-.festival-description {
-  color: #5a6c7d;
-  line-height: 1.6;
-  margin: 0 0 16px 0;
-  font-size: 0.95rem;
-  padding-left: 5px;
-  border-left: 3px solid #28a745;
-  padding-left: 12px;
-}
-
-.festival-divider {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    rgba(32, 201, 151, 0.5),
-    rgba(40, 167, 69, 0.1)
-  );
-  margin: 16px 0;
-}
 
 /* 加载状态 */
 .loading-state {

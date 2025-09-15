@@ -38,8 +38,37 @@
         </div>
       </div>
 
-      <!-- 预留的其他功能模块 -->
+      <!-- 时间管理模块 -->
+      <div class="module-card" @click="navigateTo('/timer')">
+        <div class="module-icon">⏱️</div>
+        <h3 class="module-title">时间管理</h3>
+        <p class="module-description">正计时、倒计时功能，支持提醒通知</p>
+        <div class="module-status">
+          <span class="status-badge available">可用</span>
+        </div>
+        <div class="module-features">
+          <span class="feature-tag">⏱️ 正计时</span>
+          <span class="feature-tag">⏰ 倒计时</span>
+          <span class="feature-tag">🔔 提醒</span>
+        </div>
+      </div>
 
+      <!-- 小说阅读模块 -->
+      <!-- <div class="module-card" @click="navigateTo('/novel')">
+        <div class="module-icon">📚</div>
+        <h3 class="module-title">小说阅读</h3>
+        <p class="module-description">沉浸式阅读体验，支持多种阅读设置</p>
+        <div class="module-status">
+          <span class="status-badge available">可用</span>
+        </div>
+        <div class="module-features">
+          <span class="feature-tag">📖 阅读器</span>
+          <span class="feature-tag">🎨 主题</span>
+          <span class="feature-tag">⚙️ 设置</span>
+        </div>
+      </div> -->
+
+      <!-- 预留的其他功能模块 -->
       <div class="module-card coming-soon">
         <div class="module-icon">⚙️</div>
         <h3 class="module-title">设置中心</h3>
@@ -58,21 +87,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 快速操作区 -->
-    <!-- <div class="quick-actions">
-      <h2>快速操作</h2>
-      <div class="actions-grid">
-        <button class="action-btn" @click="navigateTo('/rest-reminder')">
-          <span class="action-icon">🚀</span>
-          开始休息提醒
-        </button>
-        <button class="action-btn" disabled>
-          <span class="action-icon">⚙️</span>
-          设置中心
-        </button>
-      </div>
-    </div> -->
   </div>
 </template>
 
